@@ -1,6 +1,6 @@
 # Pico Private Plugin
 
-Provide an authentication form to keep your [Pico](http://pico.dev7studios.com/) site or part of it private.
+Provide an authentication form to keep your Pico site or part of it private.
 
 ## Install
 
@@ -49,7 +49,7 @@ Users are stored in an associative array :
 
 All you need to do is create inside your theme's folder a `login.html` page which will display the login form. The form is pretty simple : 
 
-````html
+```html
 <form method="post">
    {% if login_error %}<p class="error">{{ login_error }}</p>{% endif %}
    <input type="text" name="username" id="username" placeholder="Username" value="{{ username }}"/>

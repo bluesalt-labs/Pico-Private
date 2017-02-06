@@ -125,19 +125,16 @@ class Pico_Private extends AbstractPicoPlugin {
         header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
         $themesDir = $this->getPico()->getThemesDir();
 
-        $loader = new Twig_Loader_Filesystem($themesDir);
-        $twig_login = new Twig_Environment($loader, $twigVariables);
         $twigVariables['meta']['title'] = "Login";
-
 
         $loginFile = $themesDir . $this->theme . "/login";
 
         if ( file_exists($loginFile . ".twig") ) {
-            echo $twig_login->render($this->theme . "/login.twig", $twigVariables);
+            echo $this->getTwig()->render("login.twig", $twigVariables);
         } else if( file_exists($loginFile . ".html") ) {
-            echo $twig_login->render($this->theme . "/login.html", $twigVariables);
+            echo $this->getTwig()->render("login.html", $twigVariables);
         } else if( file_exists($loginFile . ".htm") ) {
-            echo $twig_login->render($this->theme . "/login.htm", $twigVariables);
+            echo $this->getTwig()->render("login.htm", $twigVariables);
         } else {
             echo '<h1>Pico private error</h1>';
             echo '<h2>No "login.html" or "login.twig" file found in theme ' . $this->theme;

@@ -1,7 +1,7 @@
 <?php
 /*
  * Depreciated config file. Please place the following in the main Pico config file:
- * 
+ *
     $config['pico_private'] = array(
         "enabled"   => true,
         "private"   => "meta",
@@ -10,7 +10,7 @@
             "admin"     => "d033e22ae348aeb5660fc2140aec35850c4da997",
         ),
     );
- * 
+ *
  */
 /*-------------------------------------------------------------------*/
 
