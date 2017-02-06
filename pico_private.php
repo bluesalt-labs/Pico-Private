@@ -82,6 +82,8 @@ class Pico_Private extends AbstractPicoPlugin {
             $twigVariables['authed'] = $_SESSION['authed'];
             $twigVariables['username'] =  $_SESSION['username'];
         }
+
+        $twigVariables['session'] = $_SESSION;
     }
 
     private function redirect($url) {
