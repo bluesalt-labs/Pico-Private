@@ -21,12 +21,6 @@ class Pico_Private extends AbstractPicoPlugin {
 
     private $privatePage;
 
-    /*
-    public function onPluginsLoaded() {
-        session_start();
-    }
-    */
-
     public function onConfigLoaded(&$config) {
         $this->config = $config["pico_private"];
         $this->users = $this->config['users'];
@@ -34,7 +28,8 @@ class Pico_Private extends AbstractPicoPlugin {
         $this->theme = $config['theme'];
         $this->base_url = $config['base_url'];
 
-        session_start();
+        session_name('pico_private_'. str_replace(' ', '_', strtolower($config["site_title"])));
+        $this->persistSession();
     }
 
     public function onRequestUrl(&$url) {
@@ -151,22 +146,29 @@ class Pico_Private extends AbstractPicoPlugin {
         exit;
     }
 
-    // create or renew persist_session cookie
+    // create, renew, or destroy the session
     private function persistSession($setTo = null) {
         $expire = 0;
 
         if($setTo === false) { $expire = 0; }
         else if( $setTo === true || (isset($_COOKIE['persist_session']) && $_COOKIE['persist_session'] === true) ) {
-            $expire = $this->sessionPersistTime();
+            $expire = $this->getSessionPersistTime();
         }
 
         $twigVariables['persist_session'] = ($expire > 0 ? true : false);
-        $_SESSION['expire'] = $expire; // todo: is this needed?
-        setcookie('persist_session', $twigVariables['persist_session'], $expire, '/', $this->base_url, true, true); // todo: is this needed?
+
+        if($setTo === true) {
+            $twigVariables['persist_session'] = true;
+            session_set_cookie_params($expire, '/',$this->base_url, true, true);
+        } else {
+            $twigVariables['persist_session'] = false;
+        }
+        setcookie('persist_session', $twigVariables['persist_session'], $expire, '/', $this->base_url, true, true);
+        session_start();
     }
 
     // Gets the time a session should expire if it's set to persist
-    private function sessionPersistTime() {
+    private function getSessionPersistTime() {
         $persist_for = 2592000; // default persist time in seconds (1 month)
         if( isset($this->config['stay_logged_in_time']) && intval($this->config['stay_logged_in_time']) > 0 ) {
             $persist_for = intval($this->config['stay_logged_in_time']);
