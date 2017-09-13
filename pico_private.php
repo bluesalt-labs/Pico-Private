@@ -21,9 +21,11 @@ class Pico_Private extends AbstractPicoPlugin {
 
     private $privatePage;
 
+    /*
     public function onPluginsLoaded() {
         session_start();
     }
+    */
 
     public function onConfigLoaded(&$config) {
         $this->config = $config["pico_private"];
@@ -31,6 +33,8 @@ class Pico_Private extends AbstractPicoPlugin {
 
         $this->theme = $config['theme'];
         $this->base_url = $config['base_url'];
+
+        session_start();
     }
 
     public function onRequestUrl(&$url) {
@@ -51,6 +55,7 @@ class Pico_Private extends AbstractPicoPlugin {
             }
         }
         if($url == 'logout') {
+            if($_COOKIE['persist_session'] !== true) { session_unset(); }
             session_destroy();
             $this->redirect('/');
         }
@@ -62,9 +67,6 @@ class Pico_Private extends AbstractPicoPlugin {
         } else {
             $this->privatePage = false;
         }
-
-        // todo
-        //$this->privatePage = (in_array('private', $meta) ?  $meta['private'] : false);
     }
 
     public function onPageRendering(Twig_Environment $twig, array &$twigVariables, &$template) {
@@ -98,6 +100,7 @@ class Pico_Private extends AbstractPicoPlugin {
         if(isset($_POST['password'])) {
             $postPassword = $_POST['password'];
         }
+        $postPersistSession = (is_null($_POST['persist_session']) ? false : true);
 
         if(!empty($postUsername) && !empty($postPassword)) {
             $authenticated = false;
@@ -114,6 +117,9 @@ class Pico_Private extends AbstractPicoPlugin {
             if($authenticated == true) {
                 $_SESSION['authed'] = true;
                 $_SESSION['username'] = $postUsername;
+
+                $this->persistSession($postPersistSession);
+
                 if(isset($_POST['redirect_url'])) {
                     $this->redirect($_POST['redirect_url']);
                 }
@@ -121,6 +127,7 @@ class Pico_Private extends AbstractPicoPlugin {
             } else {
                 $twigVariables['login_error'] = 'Invalid login';
                 $twigVariables['username'] = $postUsername;
+                $twigVariables['persist_session'] = $postPersistSession;
             }
         }
 
@@ -142,6 +149,30 @@ class Pico_Private extends AbstractPicoPlugin {
             echo '<h2>No "login.html" or "login.twig" file found in theme ' . $this->theme;
         }
         exit;
+    }
+
+    // create or renew persist_session cookie
+    private function persistSession($setTo = null) {
+        $expire = 0;
+
+        if($setTo === false) { $expire = 0; }
+        else if( $setTo === true || (isset($_COOKIE['persist_session']) && $_COOKIE['persist_session'] === true) ) {
+            $expire = $this->sessionPersistTime();
+        }
+
+        $twigVariables['persist_session'] = ($expire > 0 ? true : false);
+        $_SESSION['expire'] = $expire; // todo: is this needed?
+        setcookie('persist_session', $twigVariables['persist_session'], $expire, '/', $this->base_url, true, true); // todo: is this needed?
+    }
+
+    // Gets the time a session should expire if it's set to persist
+    private function sessionPersistTime() {
+        $persist_for = 2592000; // default persist time in seconds (1 month)
+        if( isset($this->config['stay_logged_in_time']) && intval($this->config['stay_logged_in_time']) > 0 ) {
+            $persist_for = intval($this->config['stay_logged_in_time']);
+        }
+
+        return time() + $persist_for;
     }
 
 }
